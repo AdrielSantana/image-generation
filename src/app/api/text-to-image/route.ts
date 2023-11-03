@@ -3,6 +3,8 @@ import { credentials } from "../ credentials";
 
 export async function POST(request: Request) {
   const { prompt, negativePrompt, CFG, steps } = await request.json();
+
+  console.log('credentials', credentials)
   try {
     const auth = new GoogleAuth({
       credentials,
