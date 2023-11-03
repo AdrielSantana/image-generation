@@ -15,6 +15,10 @@ import {
   Textarea,
   VStack,
   Circle,
+  Slider,
+  SliderTrack,
+  SliderFilledTrack,
+  SliderThumb,
 } from "@chakra-ui/react";
 
 import { useState } from "react";
@@ -24,7 +28,11 @@ import { AiFillFileAdd, AiFillDelete } from "react-icons/ai";
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
+  const [negativePrompt, setNegativePrompt] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [strength, setStrength] = useState<number>(50);
+  const [CFG, setCFG] = useState<number>(10);
+  const [steps, setSteps] = useState<number>(100);
   const [isFetching, setIsFetching] = useState(false);
   const [imageToManipulate64, setImageToManipulate64] = useState("");
   const [imageToManipulatePreview, setImageToManipulatePreview] = useState("");
@@ -33,18 +41,21 @@ export default function Home() {
   const textToImage = async (prompt: string) => {
     setIsFetching(true);
     try {
-      const response = await fetch(process.env.TEXT_TO_IMAGE_URL ?? "", {
+      const response = await fetch("/api/text-to-image", {
         method: "POST",
         headers: {
-          Authorization: "Bearer " + process.env.API_KEY,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          instances: [{ prompt }],
+          prompt,
+          negativePrompt,
+          CFG,
+          steps
         }),
       });
-      const data = await response.json();
-      setImage64(data.image64);
+      const res = await response.json();
+      if (res.error) throw new Error(res.error.message);
+      setImage64(res.data.predictions[0]);
     } catch (error) {
       if (error instanceof Error) setErrorMessage(error.message);
       console.log(error);
@@ -56,18 +67,23 @@ export default function Home() {
   const imageToImage = async (prompt: string, image64: string) => {
     setIsFetching(true);
     try {
-      const response = await fetch(process.env.IMAGE_TO_IMAGE_URL ?? "", {
+      const response = await fetch("/api/image-to-image", {
         method: "POST",
         headers: {
-          Authorization: "Bearer " + process.env.API_KEY ?? "",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          instances: [{ prompt, image64 }],
+          prompt,
+          negativePrompt,
+          strength,
+          image64,
+          CFG,
+          steps
         }),
       });
-      const data = await response.json();
-      setImage64(data.image64);
+      const res = await response.json();
+      if (res.error) throw new Error(res.error.message);
+      setImage64(res.data.predictions[0]);
     } catch (error) {
       if (error instanceof Error) setErrorMessage(error.message);
       console.log(error);
@@ -77,6 +93,7 @@ export default function Home() {
   };
 
   const handleClickToGenerateImage = () => {
+    setErrorMessage("");
     if (imageToManipulate64) {
       imageToImage(prompt, imageToManipulate64);
     } else {
@@ -100,7 +117,6 @@ export default function Home() {
           setImageToManipulatePreview(result);
           const base64result = result.split(",")[1];
           setImageToManipulate64(base64result);
-          console.log(base64result);
         }
       };
       reader.readAsDataURL(file);
@@ -111,7 +127,7 @@ export default function Home() {
     onDrop,
     accept: { "image/jpeg": [".jpg", ".jpeg"], "image/png": [".png"] },
     maxFiles: 1,
-    maxSize: 10485760,
+    maxSize: 1 * 1024 * 1024, //1.5mb
     multiple: false,
   });
 
@@ -156,7 +172,7 @@ export default function Home() {
             bgGradient="linear(to-l, #7928CA, #FF0080)"
             bgClip="text"
             fontSize="6xl"
-            fontWeight="extrabold"
+            fontWeight="black"
             textAlign={"center"}
           >
             MandAI
@@ -180,6 +196,15 @@ export default function Home() {
                 color="white"
                 borderColor={"gray.500"}
                 placeholder="Insira um prompt"
+                variant="outline"
+              />
+              <Textarea
+                value={negativePrompt}
+                colorScheme="purple"
+                onChange={(e) => setNegativePrompt(e.target.value)}
+                color="white"
+                borderColor={"gray.500"}
+                placeholder="Insira o prompt negativo (opcional)"
                 variant="outline"
               />
               <Center
@@ -221,6 +246,71 @@ export default function Home() {
                   <AiFillDelete />
                 </Circle>
               )}
+              <Stack gap={"1rem"} direction={["column", "column", "column", "column", "column", "row"]}>
+                <Box>
+                  <Text color={"whiteAlpha.700"}>
+                    Força da manipulação:{" "}
+                    <Text as="span" fontWeight="bold">
+                      {strength}%
+                    </Text>
+                  </Text>
+                  <Slider
+                    step={10}
+                    value={strength}
+                    colorScheme="purple"
+                    onChange={(val) => setStrength(val)}
+                    width={200}
+                  >
+                    <SliderTrack>
+                      <SliderFilledTrack />
+                    </SliderTrack>
+                    <SliderThumb />
+                  </Slider>
+                </Box>
+                <Box>
+                  <Text color={"whiteAlpha.700"}>
+                    Guia do prompt (CFG):{" "}
+                    <Text as="span" fontWeight="bold">
+                      {CFG}
+                    </Text>
+                  </Text>
+                  <Slider
+                    step={1}
+                    value={CFG}
+                    colorScheme="purple"
+                    max={20}
+                    onChange={(val) => setCFG(val)}
+                    width={200}
+                  >
+                    <SliderTrack>
+                      <SliderFilledTrack />
+                    </SliderTrack>
+                    <SliderThumb />
+                  </Slider>
+                </Box>
+                <Box>
+                  <Text color={"whiteAlpha.700"}>
+                    Passos: {" "}
+                    <Text as="span" fontWeight="bold">
+                      {steps}
+                    </Text>
+                  </Text>
+                  <Slider
+                    step={10}
+                    value={steps}
+                    colorScheme="purple"
+                    max={200}
+                    min={10}
+                    onChange={(val) => setSteps(val)}
+                    width={200}
+                  >
+                    <SliderTrack>
+                      <SliderFilledTrack />
+                    </SliderTrack>
+                    <SliderThumb />
+                  </Slider>
+                </Box>
+              </Stack>
               <Button
                 isDisabled={isFetching || prompt === ""}
                 onClick={() => {
