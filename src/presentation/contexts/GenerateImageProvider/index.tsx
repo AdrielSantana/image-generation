@@ -23,7 +23,7 @@ const GenerateImageProvider = ({ children }: GenerateImageProviderProps) => {
   const [imageToManipulate64, setImageToManipulate64] = useState("");
   const [imageToManipulatePreview, setImageToManipulatePreview] = useState("");
   const [image64, setImage64] = useState("");
-  const {} = useWebSocket("ws://localhost:3001", {
+  const {} = useWebSocket(process.env.NEXT_PUBLIC_WS_URL ?? "", {
     onOpen: () => console.log(`Connected to App WS`),
     onMessage: (event) => {
       setImage64(JSON.parse(event.data).image64);
