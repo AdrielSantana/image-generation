@@ -104,7 +104,8 @@ const GenerateImagePage = () => {
                   step={1}
                   value={CFG}
                   colorScheme="purple"
-                  max={20}
+                  min={1}
+                  max={30}
                   onChange={(val) => setCFG(val)}
                   width={200}
                 >
@@ -125,7 +126,7 @@ const GenerateImagePage = () => {
                   step={10}
                   value={steps}
                   colorScheme="purple"
-                  max={200}
+                  max={150}
                   min={10}
                   onChange={(val) => setSteps(val)}
                   width={200}

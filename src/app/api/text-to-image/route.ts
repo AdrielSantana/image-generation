@@ -1,33 +1,17 @@
-import { GoogleAuth } from "google-auth-library";
-import { credentials } from "../ credentials";
-
 export async function POST(request: Request) {
   const { prompt, negativePrompt, CFG, steps } = await request.json();
-
-  console.log('credentials', credentials)
   try {
-    const auth = new GoogleAuth({
-      credentials,
-      scopes: ["https://www.googleapis.com/auth/cloud-platform"],
-    });
-
-    const token = await auth.getAccessToken();
-
-    const response = await fetch(process.env.TEXT_TO_IMAGE_URL ?? "", {
+    const response = await fetch(`${process.env.API_URL}/text-to-image`, {
       method: "POST",
       headers: {
-        Authorization: "Bearer " + token,
         "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.SECRET}`,
       },
       body: JSON.stringify({
-        instances: [
-          {
-            prompt,
-            negative_prompt: negativePrompt,
-            guindance_scale: CFG,
-            num_inference_steps: steps,
-          },
-        ],
+        prompt,
+        negativePrompt,
+        CFG,
+        steps,
       }),
     });
     const data = await response.json();
@@ -36,5 +20,7 @@ export async function POST(request: Request) {
     if (error instanceof Error) {
       return Response.json({ error: error.message });
     }
+  } finally {
+    return Response.json({ message: "prompt enviado" });
   }
 }

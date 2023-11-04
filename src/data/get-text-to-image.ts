@@ -5,7 +5,7 @@ export const getTextToImage = async (
   steps: number
 ) => {
   try {
-    const response = await fetch("/api/text-to-image", {
+    const response = await fetch('/api/text-to-image', {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

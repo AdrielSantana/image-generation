@@ -7,7 +7,7 @@ export const getImageToImage = async (
   steps: number
 ) => {
   try {
-    const response = await fetch("/api/image-to-image", {
+    const response = await fetch(`/api/image-to-image`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

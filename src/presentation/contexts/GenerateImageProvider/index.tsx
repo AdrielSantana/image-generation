@@ -6,6 +6,7 @@ import { useDropzone } from "react-dropzone";
 import { convertBase64ToDataUrl } from "@/utils/convert-base64-to-data-url";
 import { getTextToImage } from "@/data/get-text-to-image";
 import { getImageToImage } from "@/data/get-image-to-image";
+import useWebSocket from "react-use-websocket";
 
 export const GenerateImageContext = createContext<GenerateImageContextData>(
   {} as GenerateImageContextData
@@ -22,18 +23,28 @@ const GenerateImageProvider = ({ children }: GenerateImageProviderProps) => {
   const [imageToManipulate64, setImageToManipulate64] = useState("");
   const [imageToManipulatePreview, setImageToManipulatePreview] = useState("");
   const [image64, setImage64] = useState("");
+  const {} = useWebSocket("ws://localhost:3001", {
+    onOpen: () => console.log(`Connected to App WS`),
+    onMessage: (event) => {
+      setImage64(JSON.parse(event.data).image64);
+      setIsFetching(false);
+    },
+    onError: (event) => {
+      console.error(event);
+    },
+    shouldReconnect: (closeEvent) => true,
+    reconnectInterval: 3000,
+  });
 
   const textToImage = async () => {
     setIsFetching(true);
     try {
       const res = await getTextToImage(prompt, negativePrompt, CFG, steps);
+      // sendJsonMessage({ prompt });
       if (res.error) throw new Error(res.error.message);
-      setImage64(res.data.predictions[0]);
     } catch (error) {
       if (error instanceof Error) setErrorMessage(error.message);
       console.log(error);
-    } finally {
-      setIsFetching(false);
     }
   };
 
@@ -48,13 +59,11 @@ const GenerateImageProvider = ({ children }: GenerateImageProviderProps) => {
         CFG,
         steps
       );
+      // sendJsonMessage({ prompt });
       if (res.error) throw new Error(res.error.message);
-      setImage64(res.data.predictions[0]);
     } catch (error) {
       if (error instanceof Error) setErrorMessage(error.message);
       console.log(error);
-    } finally {
-      setIsFetching(false);
     }
   };
 
