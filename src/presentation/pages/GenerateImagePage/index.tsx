@@ -146,11 +146,11 @@ const GenerateImagePage = () => {
             >
               Gerar Imagem
             </Button>
-            {errorMessage && (
+            {/* {errorMessage && (
               <Text color={"red.500"} fontSize={"sm"}>
                 {errorMessage}
               </Text>
-            )}
+            )} */}
           </VStack>
           <ImageContainer />
         </Stack>
